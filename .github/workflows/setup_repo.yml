@@ -1,4 +1,4 @@
-# .github/workflows/setup_repository_workflow.yml
+# .github/workflows/setup_repo.yml
 name: Setup Repository Structure and Workflows
 
 on:
@@ -67,8 +67,8 @@ jobs:
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          path: ~/.cache/pip # Default cache directory for pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }} # Key based on OS and requirements.txt
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -99,26 +99,26 @@ jobs:
           import sys
           import traceback
           import math
-
+        
           try:
               scan_file = "conversation/csv/scanning.xlsx"
               price_file = "conversation/csv/prices.xlsx"
                       
               os.makedirs("conversation/Temp", exist_ok=True)
               log_path = "conversation/Logs/workflow_activity.log"
-
+        
               with open(log_path, "a") as logfile:
                   now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
                   logfile.write(f"{now} Both files received. Starting initial merge.\n")
-
+        
               scan_df = pd.read_excel(scan_file)
               price_df = pd.read_excel(price_file)
-
+        
               price_df["OriginalPrice"] = pd.to_numeric(price_df["OriginalPrice"], errors='coerce')
               price_df = price_df[["Barcode", "OriginalPrice"]]
-
+        
               merged_df = pd.merge(scan_df, price_df, on="Barcode", how="left")
-
+        
               def format_price(price):
                   if pd.isna(price):
                       return ''
@@ -126,15 +126,15 @@ jobs:
                       return str(int(price))
                   else:
                       return str(price)
-
+        
               merged_df["OriginalPrice"] = merged_df["OriginalPrice"].apply(format_price)
-
+        
               final_columns = ["Barcode", "Article", "Percentage", "OriginalPrice"]
               merged_df = merged_df[final_columns]
-
+        
               merged_csv_path = "conversation/Temp/merging_temp.csv"
               merged_df.to_csv(merged_csv_path, index=False)
-
+        
               version_file_path = "conversation/Temp/version.txt"
               timestamp_for_version = datetime.now().strftime("DB_Version_%Y%m%d_%H%M%S")
               with open(version_file_path, 'w') as f:
@@ -143,7 +143,7 @@ jobs:
               with open(log_path, "a") as logfile:
                   now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
                   logfile.write(f"{now} Merging complete. {os.path.basename(merged_csv_path)} created. Version marker file ({os.path.basename(version_file_path)}) created with content: {timestamp_for_version}.\n")
-
+        
           except Exception as e:
               log_path_error = "conversation/Logs/workflow_activity.log"
               with open(log_path_error, "a") as logfile:
@@ -364,3 +364,103 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Required Python Packages
+        run: pip install -r requirements.txt
+
+      - name: Log Prices.xlsx File Received
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p conversation/Logs
+          LOG_FILE="conversation/Logs/workflow_activity.log"
+          echo "$(date +"%Y-%m-%d %H:%M:%S") - Prices.xlsx file received." >> "$LOG_FILE"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add "$LOG_FILE"
+          git pull --rebase origin main || true
+          
+          if ! git diff --staged --quiet; then
+              git commit -m "Log: Prices.xlsx received."
+          else
+              echo "No new log entry commit."
+          fi
+          git push --force-with-lease || echo "Log push failed, might be merged by another push."
+EOF_PRICES
+          echo "on_prices_upload.yml created successfully."
+
+      - name: Create on_scanning_upload.yml
+        run: |
+          echo "Creating on_scanning_upload.yml..."
+          cat <<'EOF_SCANNING' > .github/workflows/on_scanning_upload.yml
+# .github/workflows/on_scanning_upload.yml
+name: On Scanning File Upload - Log Received
+
+on:
+  push:
+    paths:
+      - 'conversation/csv/scanning.xlsx'
+
+jobs:
+  log_received:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Required Python Packages
+        run: pip install -r requirements.txt
+
+      - name: Log Scanning.xlsx File Received
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p conversation/Logs
+          LOG_FILE="conversation/Logs/workflow_activity.log"
+          echo "$(date +"%Y-%m-%d %H:%M:%S") - Scanning.xlsx file received." >> "$LOG_FILE"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add "$LOG_FILE"
+          git pull --rebase origin main || true
+          
+          if ! git diff --staged --quiet; then
+              git commit -m "Log: Scanning.xlsx received."
+          else
+              echo "No new log entry commit."
+          fi
+          git push --force-with-lease || echo "Log push failed, might be merged by another push."
+EOF_SCANNING
+          echo "on_scanning_upload.yml created successfully."
+
+      - name: Commit and Push all generated files and folders
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "feat: Auto-generated repository structure and workflows"
+          git push
+          echo "Repository setup complete!"
