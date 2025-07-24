@@ -1,8 +1,10 @@
-# .github/workflows/setup_repo.yml
+# .github/workflows/setup_repository_workflow.yml
 name: Setup Repository Structure and Workflows
 
 on:
-  workflow_dispatch: # This allows manual triggering from GitHub Actions UI
+  push:
+    paths:
+      - 'test/.keep' # Trigger when a .keep file is pushed to the 'test' directory
 
 jobs:
   setup:
@@ -11,45 +13,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} # Required to push changes
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Log Setup Start
+      - name: Create necessary folders
         run: |
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - Starting repository setup." >> setup_log.txt
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add setup_log.txt || true # Add log if it exists, ignore if not
-          git commit -m "Setup: Initial setup log." || true
-          git push || true
-
-      - name: Create Base Folders
-        run: |
-          echo "Creating core directories..."
+          echo "Creating folders..."
+          mkdir -p .github/workflows
           mkdir -p conversation/csv
           mkdir -p conversation/Logs
           mkdir -p conversation/Ready
           mkdir -p conversation/Temp
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - Core folders created." >> setup_log.txt
+          echo "Folders created successfully."
 
       - name: Create requirements.txt
         run: |
           echo "Creating requirements.txt..."
-          echo -e "pandas\nopenpyxl\nsqlite-utils" > requirements.txt
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - requirements.txt created." >> setup_log.txt
+          cat <<EOL > requirements.txt
+          pandas
+          openpyxl
+          sqlite-utils
+          EOL
+          echo "requirements.txt created successfully."
 
-      - name: Create initial workflow_activity.log
+      - name: Create check_and_initial_merge.yml
         run: |
-          echo "Creating initial workflow_activity.log..."
-          touch conversation/Logs/workflow_activity.log # Create an empty log file
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - Initial workflow_activity.log created." >> setup_log.txt
-
-      - name: Create Workflow Files
-        run: |
-          echo "Creating individual workflow YAML files..."
-          mkdir -p .github/workflows
-
-          # Workflow 1: check_and_initial_merge.yml
-          cat << 'EOF' > .github/workflows/check_and_initial_merge.yml
+          echo "Creating check_and_initial_merge.yml..."
+          cat <<'EOF_MERGE' > .github/workflows/check_and_initial_merge.yml
 # .github/workflows/check_and_initial_merge.yml
 name: Check Files and Initial Merge
 
@@ -102,7 +92,7 @@ jobs:
       - name: Run Initial Merge and Create version.txt
         if: steps.check_files.outputs.both_files_exist == 'true'
         run: |
-          python3 <<'PYEOF'
+          python3 <<EOF
           import pandas as pd
           import os
           from datetime import datetime
@@ -161,7 +151,7 @@ jobs:
                   logfile.write(f"{now} ERROR: Initial Merge Failed: {str(e)}\n")
                   logfile.write(traceback.format_exc())
               sys.exit(1)
-          PYEOF
+          EOF
         env:        
           PYTHONUNBUFFERED: 1        
         
@@ -184,10 +174,13 @@ jobs:
           fi        
                   
           git push --force
-EOF
+EOF_MERGE
+          echo "check_and_initial_merge.yml created successfully."
 
-          # Workflow 2: final_conversion_workflow.yml
-          cat << 'EOF' > .github/workflows/final_conversion_workflow.yml
+      - name: Create final_conversion_workflow.yml
+        run: |
+          echo "Creating final_conversion_workflow.yml..."
+          cat <<'EOF_FINAL' > .github/workflows/final_conversion_workflow.yml
 # .github/workflows/final_conversion_workflow.yml
 name: Final Conversion Workflow
 
@@ -261,7 +254,7 @@ jobs:
       - name: Run Final Conversion (CSV to DB, Zip)
         if: steps.check_files.outputs.files_exist == 'true'
         run: |
-          python3 <<'PYEOF'
+          python3 <<EOF
           import pandas as pd
           import sqlite3
           import os
@@ -312,7 +305,6 @@ jobs:
                   logfile.write(f"{now} DB conversion and zipping complete. Final ZIP created: {os.path.basename(zip_name)}.\n")
                   logfile.write(f"{now} Workflow Finished.\n")
         
-              # Reset the log file by truncating it
               with open(log_path, "w") as logfile:
                   logfile.write("")
               
@@ -322,8 +314,8 @@ jobs:
                   now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")        
                   logfile.write(f"{now} ERROR: Final Conversion Failed: {str(e)}\n")        
                   logfile.write(traceback.format_exc())        
-              sys.exit(1)
-          PYEOF
+              sys.exit(1)       
+          EOF        
         env:        
           PYTHONUNBUFFERED: 1        
         
@@ -349,10 +341,13 @@ jobs:
               git commit -m "Finalized: Created ZIP, cleaned up source and temporary files, and reset log."        
           fi        
           git push --force
-EOF
+EOF_FINAL
+          echo "final_conversion_workflow.yml created successfully."
 
-          # Workflow 3: on_prices_upload.yml
-          cat << 'EOF' > .github/workflows/on_prices_upload.yml
+      - name: Create on_prices_upload.yml
+        run: |
+          echo "Creating on_prices_upload.yml..."
+          cat <<'EOF_PRICES' > .github/workflows/on_prices_upload.yml
 # .github/workflows/on_prices_upload.yml
 name: On Prices File Upload - Log Received
 
@@ -369,112 +364,3 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Cache Python dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install Required Python Packages
-        run: pip install -r requirements.txt
-
-      - name: Log Prices.xlsx File Received
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p conversation/Logs
-          LOG_FILE="conversation/Logs/workflow_activity.log"
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - Prices.xlsx file received." >> "$LOG_FILE"
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add "$LOG_FILE"
-          git pull --rebase origin main || true
-          
-          if ! git diff --staged --quiet; then
-              git commit -m "Log: Prices.xlsx received."
-          else
-              echo "No new log entry commit."
-          fi
-          git push --force-with-lease || echo "Log push failed, might be merged by another push."
-EOF
-
-          # Workflow 4: on_scanning_upload.yml
-          cat << 'EOF' > .github/workflows/on_scanning_upload.yml
-# .github/workflows/on_scanning_upload.yml
-name: On Scanning File Upload - Log Received
-
-on:
-  push:
-    paths:
-      - 'conversation/csv/scanning.xlsx'
-
-jobs:
-  log_received:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Cache Python dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install Required Python Packages
-        run: pip install -r requirements.txt
-
-      - name: Log Scanning.xlsx File Received
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p conversation/Logs
-          LOG_FILE="conversation/Logs/workflow_activity.log"
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - Scanning.xlsx file received." >> "$LOG_FILE"
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add "$LOG_FILE"
-          git pull --rebase origin main || true
-          
-          if ! git diff --staged --quiet; then
-              git commit -m "Log: Scanning.xlsx received."
-          else
-              echo "No new log entry commit."
-          fi
-          git push --force-with-lease || echo "Log push failed, might be merged by another push."
-EOF
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - All workflow files created." >> setup_log.txt
-
-      - name: Commit and Push All Setup Files
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          
-          # Add all created folders, files, and initial log
-          git add conversation/
-          git add requirements.txt
-          git add .github/workflows/
-          git add setup_log.txt
-          
-          if git diff --staged --quiet; then
-              echo "No changes to commit from setup."
-          else
-              git commit -m "Repository Setup: Initialized folders, requirements.txt, and workflow files."
-          fi
-          
-          # Use --force as this is a setup commit and might overwrite empty repo state
-          git push --force
-          echo "$(date +"%Y-%m-%d %H:%M:%S") - Repository setup complete and pushed." >> setup_log.txt
