@@ -1,0 +1,114 @@
+name: Setup Repository Structure and Workflows
+
+on:
+  push:
+    paths:
+      - 'test/.keep' # Trigger when a .keep file is pushed to the 'test' directory
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Create necessary folders
+        run: |
+          echo "Creating folders..."
+          mkdir -p .github/workflows
+          mkdir -p conversation/csv
+          mkdir -p conversation/Logs
+          mkdir -p conversation/Ready
+          mkdir -p conversation/Temp
+          echo "Folders created successfully."
+
+      - name: Create requirements.txt
+        run: |
+          echo "Creating requirements.txt..."
+          printf "pandas
+openpyxl
+sqlite-utils
+" > requirements.txt
+          echo "requirements.txt created successfully."
+
+      - name: Create check_and_initial_merge.yml
+        run: |
+          cat > .github/workflows/check_and_initial_merge.yml << 'EOF'
+name: Check Files and Initial Merge
+
+on:
+  push:
+    paths:
+      - 'conversation/csv/scanning.xlsx'
+      - 'conversation/csv/prices.xlsx'
+
+jobs:
+  initial_merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and ensure latest
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Required Python Packages
+        run: pip install -r requirements.txt
+
+      - name: Verify both actual data files exist
+        id: check_files
+        run: |
+          SCANNING_FILE="conversation/csv/scanning.xlsx"
+          PRICES_FILE="conversation/csv/prices.xlsx"
+
+          if [ -f "$SCANNING_FILE" ] && [ -f "$PRICES_FILE" ]; then
+            echo "Both scanning.xlsx and prices.xlsx found. Proceeding with initial merge."
+            echo "both_files_exist=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "One or both Excel files missing. Skipping initial merge for now."
+            echo "both_files_exist=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Initial Merge and Create version.txt
+        if: steps.check_files.outputs.both_files_exist == 'true'
+        run: |
+          python3 scripts/initial_merge.py
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Commit and Push All Generated Files
+        if: steps.check_files.outputs.both_files_exist == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add conversation/Temp/merging_temp.csv
+          git add conversation/Temp/version.txt
+          git add conversation/Logs/workflow_activity.log
+
+          if git diff --staged --quiet; then
+              echo "No changes to commit from this step."
+          else
+              git commit -m "Initial Merge: Created merging_temp.csv, version.txt, and updated logs."
+          fi
+
+          git push --force
+EOF
