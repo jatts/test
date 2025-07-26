@@ -103,7 +103,8 @@ try:
         file_path = os.path.join(csv_folder, file)
         if os.path.isfile(file_path):
             os.remove(file_path)
-    log("All files in CSV folder deleted.")
+    log("All temp files deleted.")
+log("Done.")
 except Exception as e:
     log(f"Error deleting files in CSV folder: {e}")
     exit(1)
