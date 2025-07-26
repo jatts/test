@@ -6,3 +6,13 @@
 2025-07-26 13:42:24 - Cleaned up raw DB file after zipping.
 2025-07-26 13:42:24 - All input files deleted successfully.
 2025-07-26 13:42:24 - log_done.txt created.
+2025-07-26 13:48:23 - All required files found.
+2025-07-26 13:48:23 - Read all input files successfully. Version: 2025-0101
+2025-07-26 13:48:23 - DataFrames merged and cleaned.
+2025-07-26 13:48:23 - SQLite DB created.
+2025-07-26 13:48:23 - DB zipped successfully.
+2025-07-26 13:48:23 - Cleaned up raw DB file after zipping.
+2025-07-26 13:48:23 - Deleted file: scanning.xlsx
+2025-07-26 13:48:23 - Deleted file: prices.xlsx
+2025-07-26 13:48:23 - Deleted file: version.txt
+2025-07-26 13:48:23 - ✅ All steps completed including input file cleanup.
