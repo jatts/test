@@ -1,8 +1,8 @@
-2025-07-26 11:33:06 - All required files found.
-2025-07-26 11:33:06 - Read all input files successfully. Version: 2025-0104
-2025-07-26 11:33:06 - Merged OriginalPrice from prices.xlsx into scanning.xlsx successfully.
-2025-07-26 11:33:06 - SQLite DB created at conversation/Ready/2025-0104.db
-2025-07-26 11:33:06 - Zipped DB at conversation/Ready/2025-0104.zip
-2025-07-26 11:33:06 - Removed raw DB file after zipping.
-2025-07-26 11:33:06 - All temp files deleted.
-2025-07-26 11:33:06 - Done
+2025-07-26 12:31:45 - All required files uploaded.
+2025-07-26 12:31:46 - Read all input files successfully. New Version: 2025-0101
+2025-07-26 12:31:46 - Merged and cleaning successfully.
+2025-07-26 12:31:46 - SQLite DB created
+2025-07-26 12:31:46 - Zipped created
+2025-07-26 12:31:46 - Removed raw DB file after zipping.
+2025-07-26 12:31:46 - All temp files deleted.
+2025-07-26 12:31:46 - Done
