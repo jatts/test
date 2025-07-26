@@ -26,7 +26,7 @@ for file in required_files:
         exit(1)
 log("All required files found.")
 
-# Step 2: Read input files
+# Step 2: Read files
 try:
     scan_df = pd.read_excel(os.path.join(csv_folder, 'scanning.xlsx'))
     price_df = pd.read_excel(os.path.join(csv_folder, 'prices.xlsx'))
@@ -72,33 +72,24 @@ except Exception as e:
     log(f"Error zipping DB: {e}")
     exit(1)
 
-# Step 6: Delete original DB
+# Step 6: Cleanup raw DB
 try:
     os.remove(db_path)
     log("Cleaned up raw DB file after zipping.")
 except Exception as e:
-    log(f"Error during DB cleanup: {e}")
-    exit(1)
+    log(f"Error during raw DB cleanup: {e}")
 
-# Step 7: Delete original input files
-deleted = []
-for f in required_files:
-    full = os.path.join(csv_folder, f)
+# ✅ Step 7: Delete input files after processing
+delete_list = ['scanning.xlsx', 'prices.xlsx', 'version.txt']
+for file in delete_list:
     try:
-        os.remove(full)
-        deleted.append(f)
+        full_path = os.path.join(csv_folder, file)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+            log(f"Deleted file: {file}")
+        else:
+            log(f"File not found for deletion: {file}")
     except Exception as e:
-        log(f"Error deleting file {f}: {e}")
+        log(f"Error deleting {file}: {e}")
 
-if len(deleted) == len(required_files):
-    log("All input files deleted successfully.")
-else:
-    log("Some input files were not deleted.")
-
-# Step 8: Log Done
-try:
-    with open(os.path.join(csv_folder, 'log_done.txt'), 'w') as done_log:
-        done_log.write('Conversion and cleanup completed.\n')
-    log("log_done.txt created.")
-except Exception as e:
-    log(f"Error creating log_done.txt: {e}")
+log("✅ All steps completed including input file cleanup.")
