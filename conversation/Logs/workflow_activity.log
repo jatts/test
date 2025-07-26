@@ -1,0 +1,8 @@
+2025-07-26 13:42:24 - All required files found.
+2025-07-26 13:42:24 - Read all input files successfully. Version: 2025-0101
+2025-07-26 13:42:24 - DataFrames merged and cleaned.
+2025-07-26 13:42:24 - SQLite DB created.
+2025-07-26 13:42:24 - DB zipped successfully.
+2025-07-26 13:42:24 - Cleaned up raw DB file after zipping.
+2025-07-26 13:42:24 - All input files deleted successfully.
+2025-07-26 13:42:24 - log_done.txt created.
