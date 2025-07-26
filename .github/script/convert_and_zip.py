@@ -99,7 +99,7 @@ except Exception as e:
 
 # Step 7: Delete all files in CSV folder
 try:
-    for file in os.listdir(csv_folder):
+    for file in required_files:
         file_path = os.path.join(csv_folder, file)
         if os.path.isfile(file_path):
             os.remove(file_path)
