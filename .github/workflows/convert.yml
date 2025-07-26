@@ -25,7 +25,7 @@ jobs:
           pip install -r .github/script/requirements.txt
 
       - name: Run Python merge & convert
-        run: python .github/script/merge_convert_zip.py
+        run: python .github/script/convert_and_zip.py
 
       - name: Commit log and zip
         run: |
