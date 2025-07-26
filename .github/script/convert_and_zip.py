@@ -1,74 +1,83 @@
 import pandas as pd
 import sqlite3
-import zipfile
 import os
+import zipfile
 from datetime import datetime
 
-# Define file paths
-scan_path = 'conversation/xlsx/scanning.xlsx'
-price_path = 'conversation/xlsx/prices.xlsx'
-version_path = 'conversation/xlsx/version.txt'
-csv_path = 'conversation/Merging/merging_temp.csv'
-db_path = ''
-zip_path = ''
-log_path = 'conversation/Logs/workflow_log.txt'
+log_path = "conversation/Logs/workflow_log.txt"
+xlsx_dir = "conversation/xlsx"
+ready_dir = "conversation/Ready"
 
 def log(message):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(log_path, 'a') as f:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(log_path, "a") as f:
         f.write(f"{timestamp} - {message}\n")
     print(f"{timestamp} - {message}")
 
 try:
-    log("✅ Starting process...")
+    # Ensure directories exist
+    os.makedirs(ready_dir, exist_ok=True)
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
-    # Check files
-    if not all(os.path.exists(p) for p in [scan_path, price_path, version_path]):
-        raise FileNotFoundError("Missing one or more input files.")
+    log("Start: Checking required files")
+    required_files = ["scanning.xlsx", "prices.xlsx", "version.txt"]
+    for file in required_files:
+        if not os.path.exists(os.path.join(xlsx_dir, file)):
+            raise FileNotFoundError(f"{file} not found.")
 
-    log("📂 All input files found.")
+    log("All required files found.")
 
-    # Load files
-    scanning = pd.read_excel(scan_path)
-    prices = pd.read_excel(price_path)
-    with open(version_path, 'r') as f:
+    # Read version
+    with open(os.path.join(xlsx_dir, "version.txt"), "r") as f:
         version = f.read().strip()
 
-    log(f"📄 Files read successfully. Version: {version}")
+    log(f"Version extracted: {version}")
 
-    # Merge data
-    merged = pd.merge(scanning, prices[['Barcode', 'OriginalPrice']], on='Barcode', how='left')
-    merged['OriginalPrice'] = merged['OriginalPrice'].fillna('').apply(lambda x: str(int(x)) if isinstance(x, float) else str(x))
+    # Load Excel files
+    scan_df = pd.read_excel(os.path.join(xlsx_dir, "scanning.xlsx"))
+    price_df = pd.read_excel(os.path.join(xlsx_dir, "prices.xlsx"))
 
-    log("🔁 Merged scanning and prices into one DataFrame.")
+    log("Excel files loaded successfully")
 
-    # Save to CSV temp
-    merged.to_csv(csv_path, index=False)
-    log("💾 Saved merged CSV.")
+    # Merge prices into scanning using Barcode
+    if 'Barcode' not in scan_df.columns or 'Barcode' not in price_df.columns:
+        raise KeyError("Missing 'Barcode' column in one of the files.")
 
-    # Convert to SQLite
-    db_path = f"conversation/Ready/{version}.db"
+    price_df = price_df[['Barcode', 'OriginalPrice']]
+    scan_df = pd.merge(scan_df, price_df, on='Barcode', how='left')
+
+    # Format price column
+    scan_df['OriginalPrice'] = scan_df['OriginalPrice'].apply(lambda x: '' if pd.isna(x) else int(x))
+
+    log("Files merged and cleaned successfully")
+
+    # Write to SQLite
+    db_path = os.path.join(ready_dir, f"{version}.db")
     conn = sqlite3.connect(db_path)
-    merged.to_sql("products", conn, if_exists="replace", index=False, dtype={"OriginalPrice": "TEXT"})
+    scan_df.to_sql("products", conn, index=False, if_exists='replace', dtype={"OriginalPrice": "TEXT"})
     conn.close()
-    log("🗃️ Converted to SQLite database.")
+
+    log(f"Database created: {db_path}")
 
     # Zip DB
-    zip_path = f"conversation/Ready/{version}.zip"
+    zip_path = os.path.join(ready_dir, f"{version}.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.write(db_path, arcname=os.path.basename(db_path))
-    log("📦 Zipped SQLite DB.")
+        zipf.write(db_path, arcname=f"{version}.db")
 
-    # Delete unwanted files
-    for file in [scan_path, price_path, version_path, csv_path, db_path]:
-        try:
-            os.remove(file)
-            log(f"🗑️ Deleted file: {file}")
-        except Exception as e:
-            log(f"⚠️ Error deleting {file}: {e}")
+    log(f"Database zipped: {zip_path}")
 
-    log("✅ Process completed successfully.\n")
+    # Delete .db after zipping
+    os.remove(db_path)
+    log(f"Deleted raw DB file: {db_path}")
+
+    # Cleanup uploaded files
+    for file in required_files:
+        os.remove(os.path.join(xlsx_dir, file))
+        log(f"Deleted: {file}")
+
+    log("Cleanup completed.")
+    log("Workflow Finished Successfully ✅")
 
 except Exception as e:
-    log(f"❌ Error: {e}")
+    log(f"❌ ERROR: {e}")
     raise
