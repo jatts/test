@@ -95,17 +95,20 @@ except Exception as e:
     log(f"Error during DB cleanup: {e}")  
     exit(1)  
   
-# Step 7: Delete input files after processing  
-try:  
-    input_files = ["scanning.xlsx", "prices.xlsx", "version.txt"]  
-    for fname in input_files:  
-        fpath = os.path.join(csv_folder, fname)  
-        if os.path.exists(fpath):  
-            os.remove(fpath)  
-            log(f"Deleted: {fname}")  
-        else:  
-            log(f"File not found: {fname}")  
-    log("All input files removed successfully.")
-except Exception as e:  
-    log(f"Error deleting input files: {e}")  
+# Final Step: Delete input files after processing (from current folder)
+try:
+    input_files = [
+        "conversation/csv/scanning.xlsx",
+        "conversation/csv/prices.xlsx",
+        "conversation/csv/version.txt"
+    ]
+    for file in input_files:
+        if os.path.exists(file):
+            os.remove(file)
+            log(f"Deleted file: {file}")
+        else:
+            log(f"File not found: {file}")
+    log("Cleanup done: All input files removed successfully.")
+except Exception as e:
+    log(f"Error during cleanup: {e}")
     exit(1)
