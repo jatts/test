@@ -22,10 +22,10 @@ jobs:
 
       - name: Install Requirements
         run: |
-          pip install -r .github/scripts/requirements.txt
+          pip install -r .github/script/requirements.txt
 
       - name: Run Python Conversion Script
-        run: python3 .github/scripts/convert_and_zip.py
+        run: python3 .github/script/convert_and_zip.py
 
       - name: Commit and Push All Changes
         run: |
