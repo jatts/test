@@ -1,0 +1,6 @@
+2025-07-26 08:55:23 - All required files found.
+2025-07-26 08:55:23 - Read all input files successfully. Version: 2025-0101
+2025-07-26 08:55:23 - Merged OriginalPrice from prices.xlsx into scanning.xlsx successfully.
+2025-07-26 08:55:23 - SQLite DB created at conversation/Ready/2025-0101.db
+2025-07-26 08:55:23 - Zipped DB at conversation/Ready/2025-0101.zip
+2025-07-26 08:55:23 - Removed raw DB file after zipping.
