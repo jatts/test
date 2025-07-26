@@ -35,7 +35,7 @@ try:
     scan_df = pd.read_excel(os.path.join(csv_folder, 'scanning.xlsx'))
     price_df = pd.read_excel(os.path.join(csv_folder, 'prices.xlsx'))
     version = open(os.path.join(csv_folder, 'version.txt')).read().strip()
-    log(f"Read all input files successfully. Version: {version}")
+    log(f"Read all input files successfully. New Version: {version}")
 except Exception as e:
     log(f"Error reading input files: {e}")
     exit(1)
@@ -55,7 +55,7 @@ try:
         lambda x: str(int(x)) if pd.notnull(x) and isinstance(x, (int, float)) else ""
     )
 
-    log("Merged OriginalPrice from prices.xlsx into scanning.xlsx successfully.")
+    log("Merged and cleaning successfully.")
 except Exception as e:
     log(f"Error during merging or cleaning: {e}")
     exit(1)
@@ -74,7 +74,7 @@ try:
                          'OriginalPrice': 'TEXT'
                      })
     conn.close()
-    log(f"SQLite DB created at {db_path}")
+    log(f"SQLite DB created")
 except Exception as e:
     log(f"Error saving to SQLite: {e}")
     exit(1)
@@ -84,7 +84,7 @@ zip_path = os.path.join(ready_folder, f"{version}.zip")
 try:
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         zipf.write(db_path, arcname=os.path.basename(db_path))
-    log(f"Zipped DB at {zip_path}")
+    log(f"Zipped created")
 except Exception as e:
     log(f"Error zipping DB: {e}")
     exit(1)
