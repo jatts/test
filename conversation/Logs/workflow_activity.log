@@ -1,10 +1,10 @@
-2025-07-26 13:25:01 - All required files uploaded.
-2025-07-26 13:25:06 - Read all input files successfully. New Version: 2025-0101
-2025-07-26 13:25:06 - Merged and cleaned successfully.
-2025-07-26 13:25:06 - SQLite DB created: conversation/Ready/2025-0101.db
-2025-07-26 13:25:06 - Zipped DB created: conversation/Ready/2025-0101.zip
-2025-07-26 13:25:06 - Removed raw DB file after zipping.
-2025-07-26 13:25:06 - Deleted: scanning.xlsx
-2025-07-26 13:25:06 - Deleted: prices.xlsx
-2025-07-26 13:25:06 - Deleted: version.txt
-2025-07-26 13:25:06 - All input files removed successfully.
+2025-07-26 13:32:42 - All required files uploaded.
+2025-07-26 13:32:47 - Read all input files successfully. New Version: 2025-0101
+2025-07-26 13:32:47 - Merged and cleaned successfully.
+2025-07-26 13:32:47 - SQLite DB created: conversation/Ready/2025-0101.db
+2025-07-26 13:32:48 - Zipped DB created: conversation/Ready/2025-0101.zip
+2025-07-26 13:32:48 - Removed raw DB file after zipping.
+2025-07-26 13:32:48 - Deleted file: conversation/csv/scanning.xlsx
+2025-07-26 13:32:48 - Deleted file: conversation/csv/prices.xlsx
+2025-07-26 13:32:48 - Deleted file: conversation/csv/version.txt
+2025-07-26 13:32:48 - Cleanup done: All input files removed successfully.
