@@ -1,37 +1,37 @@
-name: Convert and Zip - Final
+name: Merge Convert and Zip
 
 on:
   push:
     paths:
-      - 'conversation/csv/scanning.xlsx'
-      - 'conversation/csv/prices.xlsx'
-      - 'conversation/csv/version.txt'
+      - 'conversation/xlsx/scanning.xlsx'
+      - 'conversation/xlsx/prices.xlsx'
+      - 'conversation/xlsx/version.txt'
 
 jobs:
-  convert_and_zip:
+  process_files:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.x'
 
-      - name: Install Requirements
+      - name: Install .github/scripts/dependencies
         run: |
-          pip install -r .github/script/requirements.txt
+          pip install -r requirements.txt
 
-      - name: Run Python Conversion Script
-        run: python3 .github/script/convert_and_zip.py
+      - name: Run Python merge & convert
+        run: python .github/scripts/merge_convert_zip.py
 
-      - name: Commit and Push All Changes
+      - name: Commit log and zip
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add conversation/Logs/workflow_activity.log
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add conversation/Logs/workflow_log.txt
           git add conversation/Ready/*.zip
-          git commit -m "Log: Converted and zipped DB with version"
-          git push || echo "Nothing to push"
+          git commit -m "Auto: Merged, Converted, Zipped and Logged"
+          git push
