@@ -28,7 +28,7 @@ for file in required_files:
     if not os.path.exists(full_path):
         log(f"Missing required file: {file}")
         exit(1)
-log("All required files found.")
+log("All required files uploaded.")
 
 # Step 2: Read files
 try:
