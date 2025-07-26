@@ -1,38 +1,37 @@
-name: Convert Excel to SQLite (When All Files Exist)
+name: Convert and Zip - Final
 
 on:
   push:
     paths:
-      - 'conversation/xlsx/scanning.xlsx'
-      - 'conversation/xlsx/prices.xlsx'
-      - 'conversation/xlsx/version.txt'
+      - 'conversation/csv/scanning.xlsx'
+      - 'conversation/csv/prices.xlsx'
+      - 'conversation/csv/version.txt'
 
 jobs:
-  convert:
+  convert_and_zip:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Repo
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
-      - name: 🧠 Check if all required files exist
-        run: |
-          if [ ! -f "conversation/xlsx/scanning.xlsx" ] || [ ! -f "conversation/xlsx/prices.xlsx" ] || [ ! -f "conversation/xlsx/version.txt" ]; then
-            echo "❌ Required files missing"
-            exit 1
-          fi
-          echo "✅ All required files found"
-
-      - name: 🐍 Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: 📦 Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install Requirements
+        run: |
+          pip install -r scripts/requirements.txt
 
-      - name: ⚙️ Run conversion.py
-        run: python scripts/conversion.py
+      - name: Run Python Conversion Script
+        run: python3 scripts/convert_and_zip.py
 
-      - name: ✅ Conversion completed
-        run: echo "🎉 Done! Check conversation/Ready and conversation/Logs"
+      - name: Commit and Push All Changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add conversation/Logs/workflow_activity.log
+          git add conversation/Ready/*.zip
+          git commit -m "Log: Converted and zipped DB with version"
+          git push || echo "Nothing to push"
