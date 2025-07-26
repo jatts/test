@@ -22,10 +22,10 @@ jobs:
 
       - name: Install .github/scripts/dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r .guthub/script/requirements.txt
 
       - name: Run Python merge & convert
-        run: python .github/scripts/merge_convert_zip.py
+        run: python .github/script/merge_convert_zip.py
 
       - name: Commit log and zip
         run: |
