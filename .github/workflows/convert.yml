@@ -1,0 +1,38 @@
+name: Convert Excel to SQLite (When All Files Exist)
+
+on:
+  push:
+    paths:
+      - 'conversation/xlsx/scanning.xlsx'
+      - 'conversation/xlsx/prices.xlsx'
+      - 'conversation/xlsx/version.txt'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: 🧠 Check if all required files exist
+        run: |
+          if [ ! -f "conversation/xlsx/scanning.xlsx" ] || [ ! -f "conversation/xlsx/prices.xlsx" ] || [ ! -f "conversation/xlsx/version.txt" ]; then
+            echo "❌ Required files missing"
+            exit 1
+          fi
+          echo "✅ All required files found"
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: ⚙️ Run conversion.py
+        run: python scripts/conversion.py
+
+      - name: ✅ Conversion completed
+        run: echo "🎉 Done! Check conversation/Ready and conversation/Logs"
