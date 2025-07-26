@@ -16,3 +16,13 @@
 2025-07-26 13:48:23 - Deleted file: prices.xlsx
 2025-07-26 13:48:23 - Deleted file: version.txt
 2025-07-26 13:48:23 - ✅ All steps completed including input file cleanup.
+2025-07-26 13:55:43 - All required files found.
+2025-07-26 13:55:43 - Read all input files successfully. Version: 2025-0101
+2025-07-26 13:55:43 - DataFrames merged and cleaned.
+2025-07-26 13:55:43 - SQLite DB created.
+2025-07-26 13:55:43 - DB zipped successfully.
+2025-07-26 13:55:43 - Cleaned up raw DB file after zipping.
+2025-07-26 13:55:43 - Deleted file: scanning.xlsx
+2025-07-26 13:55:43 - Deleted file: prices.xlsx
+2025-07-26 13:55:43 - Deleted file: version.txt
+2025-07-26 13:55:43 - ✅ All steps completed including input file cleanup.
