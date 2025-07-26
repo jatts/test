@@ -36,16 +36,24 @@ except Exception as e:
     log(f"Error reading input files: {e}")
     exit(1)
 
-# Step 3: Merge DataFrames
+# Step 3: Merge OriginalPrice from prices.xlsx into scanning.xlsx
 try:
-    merged_df = pd.merge(scan_df, price_df, on='Barcode', how='left')
+    if 'OriginalPrice' in price_df.columns:
+        merged_df = pd.merge(scan_df, price_df[['Barcode', 'OriginalPrice']], on='Barcode', how='left')
+    else:
+        raise Exception("OriginalPrice column missing in prices.xlsx")
+
+    # Keep only desired columns (Article is from scanning only)
     merged_df = merged_df[['Barcode', 'Article', 'Percentage', 'OriginalPrice']]
+
+    # Clean OriginalPrice values
     merged_df['OriginalPrice'] = merged_df['OriginalPrice'].apply(
         lambda x: str(int(x)) if pd.notnull(x) and isinstance(x, (int, float)) else ""
     )
-    log("DataFrames merged and cleaned.")
+
+    log("Merged OriginalPrice from prices.xlsx into scanning.xlsx successfully.")
 except Exception as e:
-    log(f"Error merging data: {e}")
+    log(f"Error during merging or cleaning: {e}")
     exit(1)
 
 # Step 4: Save to SQLite
@@ -55,9 +63,14 @@ try:
     os.makedirs(ready_folder, exist_ok=True)
     conn = sqlite3.connect(db_path)
     merged_df.to_sql('data', conn, index=False, if_exists='replace',
-                     dtype={'Barcode': 'TEXT', 'Article': 'TEXT', 'Percentage': 'TEXT', 'OriginalPrice': 'TEXT'})
+                     dtype={
+                         'Barcode': 'TEXT',
+                         'Article': 'TEXT',
+                         'Percentage': 'TEXT',
+                         'OriginalPrice': 'TEXT'
+                     })
     conn.close()
-    log("SQLite DB created.")
+    log(f"SQLite DB created at {db_path}")
 except Exception as e:
     log(f"Error saving to SQLite: {e}")
     exit(1)
@@ -65,9 +78,9 @@ except Exception as e:
 # Step 5: Zip the DB
 zip_path = os.path.join(ready_folder, f"{version}.zip")
 try:
-    with zipfile.ZipFile(zip_path, 'w') as zipf:
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         zipf.write(db_path, arcname=os.path.basename(db_path))
-    log("DB zipped successfully.")
+    log(f"Zipped DB at {zip_path}")
 except Exception as e:
     log(f"Error zipping DB: {e}")
     exit(1)
@@ -75,7 +88,7 @@ except Exception as e:
 # Step 6: Cleanup unzipped DB
 try:
     os.remove(db_path)
-    log("Cleaned up raw DB file after zipping.")
+    log("Removed raw DB file after zipping.")
 except Exception as e:
-    log(f"Error during cleanup: {e}")
+    log(f"Error during DB cleanup: {e}")
     exit(1)
