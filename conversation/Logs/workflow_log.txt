@@ -1,0 +1,13 @@
+2025-07-26 16:19:45 - Start: Checking required files
+2025-07-26 16:19:45 - All required files found.
+2025-07-26 16:19:45 - Version extracted: 2025-0101
+2025-07-26 16:19:45 - Excel files loaded successfully
+2025-07-26 16:19:45 - Files merged and cleaned successfully
+2025-07-26 16:19:45 - Database created: conversation/Ready/2025-0101.db
+2025-07-26 16:19:45 - Database zipped: conversation/Ready/2025-0101.zip
+2025-07-26 16:19:45 - Deleted raw DB file: conversation/Ready/2025-0101.db
+2025-07-26 16:19:45 - Deleted: scanning.xlsx
+2025-07-26 16:19:45 - Deleted: prices.xlsx
+2025-07-26 16:19:45 - Deleted: version.txt
+2025-07-26 16:19:45 - Cleanup completed.
+2025-07-26 16:19:45 - Workflow Finished Successfully ✅
